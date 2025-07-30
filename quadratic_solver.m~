@@ -1,0 +1,86 @@
+tic
+clear
+clc
+warning off MATLAB:NonScalarInput
+warning off MATLAB:nearlySingularMatrix
+%THIS FILE SOLVES THE NAVIER STOKES FOR DIRICHLET CONDITIONS
+%ON A GENERATED GEOMETRICAL MESH BY MIXED INTERPOLATION
+
+% USAGE:
+% n and m : specify the no. of elements in two directions as specified by the mesh generation file
+% The boundary condition section specifies Boundaries of a 4 wall geometry
+% U1,U2,U3 define the initial guesses for x velocity, y velocity and
+% pressure
+% Re: defines the Re; 
+% o :define the depth of the cavity with default width set to 1; eg: o =2
+% will give a 1by 2 cavity, o =0.25 gives 1 by 0.25 and so on
+% Changing of width can be done through mesh2.m
+% Solution of the nonlinear problem can be achieved by using the Stokes flow solution section as a guess
+
+% IMPORTANT FILES:
+% mesh2: generates the mesh
+% jacob_func: generates the jacobian
+% resid_func:genrates the residual
+% main1: solves the problem
+% 
+
+%Instructions for usage of the main1 file
+% [U,U33,U11,U22,UU,curlz] = main1(U1,U2,U3,n,m,bc1,bc2,X,Y,1,D,Re,o);
+% U1,U2,U3:initial guess
+% n,m: no.of elements in 2 directions as specified above
+% bc1:specifies y velocity bcs 
+% bc2:specifies x velocity bcs
+% X,Y: plug the x,y from mesh2 here
+% b : parameter that was played with in previous codes to change boundary;
+% not used in this simulation set to 1 for this code
+% Re: specifies the Re
+% o : used to vary depth as explained above
+% U = entire solution vector; U33, U11, U22: pressure, x velocity, y velocity resp.
+% UU = stream function matrix; curlz = vorticity matrix
+
+
+
+
+i = 0;
+n = 10;
+m = 11;
+D = 1; %Diffusivity in D*[1 0; 0 1;] form: This can be varied to avoid blow up
+Re = 00;
+o = 1.1;
+
+% Generate mesh and specify the guess
+[X,Y] = mesh2(n,m,o);
+U1 = 1*ones(1,(2*n+1)*(2*m+1));
+U2 = 1*ones(1,(2*n+1)*(2*m+1));
+U3 = 0*ones(1,(n+1)*(m+1));
+
+% BC section
+bc2(:,1) = 0*ones(1,2*m+1);
+bc2(:,2) = 0*ones(1,2*m+1);
+bc2(:,3) = 0*ones(1,2*m+1);
+bc2(:,4) = 0*ones(1,2*m+1);
+bc1(:,1) = 0*ones(1,2*n+1);
+
+
+bc1(:,2) = 0.000*ones(1,2*n+1);
+bc1(:,3) = 1*ones(1,2*n+1);%This BC specifies the x-velocity of moving wall
+bc1(:,4) = 0*ones(1,2*n+1);
+
+
+%STOKES EQUATION SECTION: SOLVES STOKES EQUATION IN DOMAIN SPECIFIED BY
+%MESH2;
+[~,U33,U11,U22,UU,~] = main1(U1,U2,U3,n,m,bc1,bc2,X,Y,1,D,Re,o);
+hold on
+%  X - U
+
+%Takes the Stokes solution as guess for the nonlinear problem
+% U1 = U11'; U1 = U1(:); U2 = U22'; U2 = U2(:); U3 = U33'; U3 = U3(:);
+% Re = 600;
+% [U,U33,U11,U22,UU,curlz] = main1(U1',U2',U3',n,m,bc1, bc2,X,Y,1,D,Re,o);
+
+
+
+U33 = U33 - U33(end,end);
+
+
+toc
